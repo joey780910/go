@@ -24,7 +24,7 @@ type UserLoginInfo struct {
 type MyAToken struct {
 	Token_type  string
 	Expires_in  int
-	AccessToken string
+	AccessToken string `json:"access_token"`
 }
 
 type TripData struct {
@@ -64,18 +64,18 @@ func Login(userLoginInfo UserLoginInfo, number int) {
 	rsp, err := myClient.Post(requestURL, "application/x-www-form-urlencoded", body)
 	if err != nil {
 		//panic(err)
-		fmt.Println(err)
+		fmt.Println("error?? ", err)
 	}
 	defer rsp.Body.Close()
 
 	content, err := ioutil.ReadAll(rsp.Body)
 	if err != nil {
 		//panic(err)
-		fmt.Println(err)
+		fmt.Println("error? ", err)
 	} else {
 		elapsed := time.Since(start).Seconds()
 		fmt.Println(number, ":", userLoginInfo.Client_id, len(string(content)), "spend", elapsed, "sec")
-		// fmt.Println(string(content))
+		fmt.Println(string(content))
 
 		// Get access token
 		myAToken := MyAToken{}
@@ -86,11 +86,11 @@ func Login(userLoginInfo UserLoginInfo, number int) {
 
 		// Get Base
 		baseData := GetBaseWithAuth(myAToken.AccessToken)
-		fmt.Println(baseData.Placeid)
+		// fmt.Println("placeid: " + baseData.Placeid)
 
 		// Get All Place
 		placeData := GetPlaceWithAuth(myAToken.AccessToken)
-		fmt.Println(placeData.Marks[0].Name)
+		// fmt.Println(placeData.Marks[0].Name)
 
 		placeids := []string{}
 		for i := 0; i < 6; i++ {
@@ -122,17 +122,18 @@ func GetWithAuth(accessToken string, url string) (retbody []byte) {
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
-
-	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	retbody = body
+	defer resp.Body.Close()
+
 	return retbody
 }
 
+// BaseData yes
 type BaseData struct {
 	// Language          string
 	// AvailableLanguage []string
@@ -144,13 +145,14 @@ type BaseData struct {
 // GetBaseWithAuth 取得Base資訊
 func GetBaseWithAuth(accessToken string) (retBaseData BaseData) {
 	body := GetWithAuth(accessToken, "/base/en")
+	fmt.Println(string(body))
 
 	baseData := BaseData{}
 	err := json.Unmarshal(body, &baseData)
 	if err != nil {
+		fmt.Println('?')
 		fmt.Println(err)
 	}
-	// fmt.Println(string(body))
 
 	retBaseData = baseData
 	return retBaseData
